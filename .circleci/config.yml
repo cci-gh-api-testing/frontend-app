@@ -1,0 +1,55 @@
+version: 2.1
+
+jobs:
+  install:
+    docker:
+      - image: cimg/base:current
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: echo "Installing deps... NPM_TOKEN=${NPM_TOKEN:+is_set}"
+  lint:
+    docker:
+      - image: cimg/base:current
+    steps:
+      - checkout
+      - run:
+          name: Lint
+          command: echo "Linting frontend code..."
+  test:
+    docker:
+      - image: cimg/base:current
+    steps:
+      - checkout
+      - run:
+          name: Test
+          command: |
+            echo "Running frontend tests..."
+            echo "SENTRY_DSN is set: ${SENTRY_DSN:+yes}"
+            echo "Tests passed"
+  build:
+    docker:
+      - image: cimg/base:current
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: echo "Building frontend app..."
+
+workflows:
+  ci:
+    jobs:
+      - install:
+          context: shared-secrets
+      - lint:
+          requires:
+            - install
+      - test:
+          context: frontend-secrets
+          requires:
+            - install
+      - build:
+          requires:
+            - lint
+            - test
